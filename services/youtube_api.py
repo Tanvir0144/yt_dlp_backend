@@ -1,33 +1,47 @@
-import os, requests
+import os
+import requests
 
-API_KEY = os.getenv("YOUTUBE_API_KEY", "")
+API_KEY = os.getenv("YOUTUBE_API_KEY", "").strip()
 BASE_URL = "https://www.googleapis.com/youtube/v3"
 
-def get_trending_videos(region="BD", max_results=20):
+
+def get_trending_videos(region: str = "BD", max_results: int = 20):
+    """Fetch trending YouTube videos for a specific region"""
     if not API_KEY:
         return {"error": "Missing YouTube API key"}
+
     url = f"{BASE_URL}/videos"
     params = {
         "part": "snippet,contentDetails,statistics",
         "chart": "mostPopular",
-        "regionCode": region,
+        "regionCode": region.upper(),
         "maxResults": max_results,
-        "key": API_KEY
+        "key": API_KEY,
     }
-    r = requests.get(url, params=params)
-    data = r.json()
+
+    try:
+        res = requests.get(url, params=params, timeout=10)
+        res.raise_for_status()
+        data = res.json()
+    except Exception as e:
+        return {"error": f"Failed to fetch trending videos: {e}"}
+
     items = []
     for item in data.get("items", []):
-        snippet = item["snippet"]
+        snippet = item.get("snippet", {})
+        content = item.get("contentDetails", {})
+        stats = item.get("statistics", {})
+
         items.append({
-            "id": item["id"],
-            "title": snippet["title"],
-            "channelTitle": snippet["channelTitle"],
-            "channelId": snippet["channelId"],
-            "thumbnail": snippet["thumbnails"]["high"]["url"],
-            "duration": item["contentDetails"]["duration"],
-            "views": item["statistics"].get("viewCount"),
-            "publishedAt": snippet["publishedAt"],
-            "region": region
+            "id": item.get("id"),
+            "title": snippet.get("title"),
+            "channelTitle": snippet.get("channelTitle"),
+            "channelId": snippet.get("channelId"),
+            "thumbnail": snippet.get("thumbnails", {}).get("high", {}).get("url"),
+            "duration": content.get("duration"),
+            "views": stats.get("viewCount"),
+            "publishedAt": snippet.get("publishedAt"),
+            "region": region.upper(),
         })
+
     return items
