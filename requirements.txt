@@ -1,7 +1,14 @@
+# --- Core Frameworks ---
 fastapi==0.115.0
 uvicorn[standard]==0.30.6
 gunicorn==22.0.0
+
+# --- Core Dependencies ---
 yt-dlp==2024.10.7
 httpx==0.27.2
-python-dotenv==1.0.1
 requests==2.32.3
+python-dotenv==1.0.1
+
+# --- Optional Performance Helpers ---
+aiofiles==23.2.1        # async file handling
+anyio==4.4.0            # FastAPI async backend stability
